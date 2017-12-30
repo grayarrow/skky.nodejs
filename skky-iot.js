@@ -108,22 +108,48 @@ iot.prototype.addReturn = function(ret, obj) {
 	}
 };
 
-this.getBase = function(errcode) {
+iot.prototype.isEmpty = function() {
+	return (('undefined' === typeof(this.code) || this.code == 0) &&
+			(this.c || []).length === 0 &&
+			(this.err || []).length === 0 &&
+			(this.msg || []).length === 0 &&
+			(this.r || []).length === 0);
+};
+
+iot.prototype.getCommand = function(number) {
+	return skky.getObject(this.c, number);
+};
+iot.prototype.getError = function(number) {
+	return skky.getObject(this.err, number);
+};
+iot.prototype.getMessage = function(number) {
+	return skky.getObject(this.msg, number);
+};
+iot.prototype.getObject = function(number) {
+	return skky.getObject(this.o, number);
+};
+iot.prototype.getReturn = function(number) {
+	return skky.getObject(this.r, number);
+};
+
+// Static methods.
+
+iot.getBase = function(errcode) {
 	return new iot(errcode);
 };
 
-this.getTopWrapper = function(code, ret, cmd, msg, err) {
+iot.getTopWrapper = function(code, ret, cmd, msg, err) {
 	return new iot(code, ret, cmd, msg, err);
 };
 
-this.getWithError = function(err) {
+iot.getWithError = function(err) {
 	var i = this.getBase();
 	i.addError(err);
 	
 	return i;
 };
 
-this.getWithEvent = function(gpioid, activeLow, state, vstate) {
+iot.getWithEvent = function(gpioid, activeLow, state, vstate) {
 	var i = this.getBase();
 	i.addObject({
 		gpioid: gpioid,
@@ -135,28 +161,28 @@ this.getWithEvent = function(gpioid, activeLow, state, vstate) {
 	return i;
 };
 
-this.getWithCommand = function(cmd, obj) {
+iot.getWithCommand = function(cmd, obj) {
 	var i = new iot();
 	i.addCommand(cmd, obj);
 	
 	return i;
 };
 
-this.getWithObject = function(obj) {
+iot.getWithObject = function(obj) {
 	var i = new iot();
 	i.addObject(obj);
 	
 	return i;
 };
 
-this.getWithReturn = function(ret, obj) {
+iot.getWithReturn = function(ret, obj) {
 	var i = new iot();
 	i.addReturn(ret, obj);
 	
 	return i;
 };
 
-this.getLogicalState = function(vstate, isActiveLow, minValue, maxValue) {
+iot.getLogicalState = function(vstate, isActiveLow, minValue, maxValue) {
 	vstate = vstate || 0;
 	isActiveLow = isActiveLow || 0;
 	minValue = minValue || 0;
@@ -182,42 +208,19 @@ this.getLogicalState = function(vstate, isActiveLow, minValue, maxValue) {
 	return vstate;
 };
 
-iot.prototype.isEmpty = function() {
-	return (('undefined' === typeof(this.code) || this.code == 0) &&
-			(this.c || []).length === 0 &&
-			(this.err || []).length === 0 &&
-			(this.msg || []).length === 0 &&
-			(this.r || []).length === 0);
+iot.hasCommandCode = function(jo, code) {
+	if (code === jo.code)
+		return true;
+	
+	for(var cmd = null, i = 0; cmd = skky.getObject(jo.c, i); ++i) {
+		if (code === cmd.code)
+			return true;
+	}
+
+	return false;
+};
+iot.isKeepAlive = function(jo) {
+	return this.hasCommandCode(jo, constants.CMDCODE_KeepAlive);
 };
 
-iot.prototype.getCommand = function(number) {
-	return skky.getObject(this.c, number);
-};
-iot.prototype.getError = function(number) {
-	return skky.getObject(this.err, number);
-};
-iot.prototype.getMessage = function(number) {
-	return skky.getObject(this.msg, number);
-};
-iot.prototype.getObject = function(number) {
-	return skky.getObject(this.o, number);
-};
-iot.prototype.getReturn = function(number) {
-	return skky.getObject(this.r, number);
-};
-
-//this.hasCommandCode = function(jo, code) {
-//	if (code === jo.code)
-//		return true;
-//	
-//	for(var cmd = null, i = 0; cmd = skky.getObject(jo.c, i); ++i) {
-//		if (code === cmd.code)
-//			return true;
-//	}
-//
-//	return false;
-//};
-//this.isKeepAlive = function(jo) {
-//	return this.hasCommandCode(jo, constants.CMDCODE_KeepAlive);
-//};
 module.exports = iot;
