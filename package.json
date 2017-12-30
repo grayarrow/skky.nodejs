@@ -1,6 +1,6 @@
 {
   "name": "skky",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "General helper classes and methods.",
   "main": "index.js",
   "scripts": {
@@ -14,7 +14,7 @@
     "skky",
     "grayarrow"
   ],
-  "author": "Geroix <iot@geroix.com> (https://geroix.com/)",
+  "author": "David Dietrich <grayarrow@gmail.com> (https://grayarrow.com/)",
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/grayarrow/skky.nodejs/issues"
