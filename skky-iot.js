@@ -1,4 +1,3 @@
-//const constants = require('./constants');
 const skky = require('./skky');
 
 var transactionId = 0;

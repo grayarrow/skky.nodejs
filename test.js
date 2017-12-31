@@ -15,6 +15,8 @@ test("ensure iot object can be newed", function(t) {
 
 test("Config filename", function(t) {
 	var s = skky.getConstant('ConfigFilename');
+	console.log('Config filename:', s);
 	t.ok(skky.hasData(s));
+	t.ok(skky.hasData(skky.os.getConfig(s)));
 	t.end();
 });

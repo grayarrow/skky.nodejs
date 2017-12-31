@@ -1,4 +1,8 @@
 module.exports = {
+	app: {},
+	config: {},
+	os: {},
+
 	allGood: function(iot, hasObject) {
 		if (this.isNullOrUndefined(iot))
 			return false;
@@ -29,7 +33,7 @@ module.exports = {
 
 		return objarr;
 	},
-	getObject: function(o, nameOrNumber, fname) {
+	getObject: function(o, nameOrNumber) {
 		if (!this.isNullOrUndefined(o)) {
 			if(this.isArray(o)) {
 				nameOrNumber = this.nonNull(nameOrNumber || 0);
@@ -159,6 +163,13 @@ module.exports = {
 
 		return this.getObject(this.app, name);
 	},
+	getAppConfig: function(name) {
+		var app = this.getApp();
+		if(this.isNullOrUndefined(app.config))
+			app.config = {};
+
+		return this.getObject(app.config, name);
+	},
 	getAppConstants: function(name) {
 		var app = this.getApp();
 		if(this.isNullOrUndefined(app.constants))
@@ -174,5 +185,21 @@ module.exports = {
 			this.constants = {};
 
 		return this.constants;
+	},
+	
+	// Compare fields from src to dest object.
+	compareField: function(srcObj, destObj, fieldName) {
+		try {
+			if (skky.isNullOrUndefined(srcObj[fieldName]))
+				return false;
+			
+			if (destObj[fieldName] !== srcObj[fieldName]) {
+				destObj[fieldName] = srcObj[fieldName];
+				return true;
+			}
+		}
+		catch(err) { }
+		
+		return false;
 	}
 };

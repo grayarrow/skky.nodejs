@@ -147,5 +147,6 @@ skky.constants.getCommandAsText = function(cmd) {
 };
 
 skky.iot = require('./skky-iot');
+skky.os = require('./skkyos');
 
 module.exports = skky;
