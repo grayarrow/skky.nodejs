@@ -1,4 +1,4 @@
-var skky = {
+module.exports = {
 	allGood: function(iot, hasObject) {
 		if (this.isNullOrUndefined(iot))
 			return false;
@@ -29,15 +29,19 @@ var skky = {
 
 		return objarr;
 	},
-	getObject: function(o, number) {
+	getObject: function(o, nameOrNumber, fname) {
 		if (!this.isNullOrUndefined(o)) {
-			number = Number(number || 0);
-
 			if(this.isArray(o)) {
-				if (o.length > number)
-					return o[number];
+				nameOrNumber = this.nonNull(nameOrNumber || 0);
+
+				if (!isNumber(nameOrNumber) || o.length > nameOrNumber)
+					return o[nameOrNumber];
 			}
-			else if (number === 0) {
+			else if(this.isObject(o) && this.isString(nameOrNumber)) {
+
+				return o[nameOrNumber];
+			}
+			else if(this.nonNull(nameOrNumber, 0) === 0) {
 				return o;
 			}
 		}
@@ -54,7 +58,7 @@ var skky = {
 			minlength = 1;
 
 		if (this.isString(o))
-			return (o.length >=	 minlength);
+			return (o.length >= minlength);
 
 		if (this.isArray(o))
 			return this.isArray(o, minlength);
@@ -110,12 +114,12 @@ var skky = {
 		return (('string' === typeof o) || (o instanceof String));
 	},
 	
-	nonNull: function(s, strIfNull) {
+	nonNull: function(s, obj) {
 		if(this.hasData(s))
 			return s;
 
-		if(this.isNullOrUndefined(s) && this.hasData(strIfNull))
-			return strIfNull;
+		if(this.isNullOrUndefined(s) && !this.isNullOrUndefined(obj))
+			return obj;
 
 		return '';
 	},
@@ -129,7 +133,46 @@ var skky = {
 	},
 	trim: function(str) {
 		return this.nonNull(str).replace(/^\s+|\s+$/g, '');
+	},
+
+	// Constant definition helper.
+	addConstantToObject: function(toObject, name, value, isEnumerable) {
+		if(this.isNullOrUndefined(isEnumerable))
+			isEnumerable = true;
+
+		Object.defineProperty(toObject, name, {
+			value:      value,
+			enumerable: isEnumerable
+		});
+
+		return toObject;
+	},
+	addConstant: function(name, value, isEnumerable) {
+		return this.addConstantToObject(this.getConstants(), name, value, isEnumerable);
+	},
+	addAppConstant: function(name, value, isEnumerable) {
+		return this.addConstantToObject(this.getAppConstants(), name, value, isEnumerable);
+	},
+	getApp: function(name) {
+		if(this.isNullOrUndefined(this.app))
+			this.app = {};
+
+		return this.getObject(this.app, name);
+	},
+	getAppConstants: function(name) {
+		var app = this.getApp();
+		if(this.isNullOrUndefined(app.constants))
+			app.constants = {};
+
+		return this.getObject(app.constants, name);
+	},
+	getConstant: function(name) {
+		return this.getObject(this.getConstants(), name);
+	},
+	getConstants: function() {
+		if(this.isNullOrUndefined(this.constants))
+			this.constants = {};
+
+		return this.constants;
 	}
 };
-
-module.exports = skky;
