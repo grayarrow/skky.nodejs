@@ -1,7 +1,6 @@
 var skky = require('./skky');
 
-skky.addConstant('ConfigFilenameSafeMode', './config.json');
-skky.addConstant('ConfigFilename', './config.all.json');
+skky.addConstant('ConfigFilename', './config.json');
 //skky.addConstant('DEFAULT_', '');
 
 // Command Codes

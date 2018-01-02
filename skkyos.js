@@ -14,9 +14,9 @@ module.exports = {
 			filename = skky.getConstant('ConfigFilename');
 
 		// Configuration file support.
-		var configSafe = require(filename);
+		var configSafe = this.readTextFileSync(filename);
 
-		return JSON.parse(JSON.stringify(configSafe));
+		return JSON.parse(configSafe);
 	},
 	// These 3 must be declared before verifyConfigSettings();
 	fileExistsSync: function(filename, deleteIfExists) {

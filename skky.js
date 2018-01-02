@@ -1,3 +1,5 @@
+const rp = require('request-promise');
+
 module.exports = {
 	app: {},
 	config: {},
@@ -137,6 +139,39 @@ module.exports = {
 	},
 	trim: function(str) {
 		return this.nonNull(str).replace(/^\s+|\s+$/g, '');
+	},
+
+	postForm: function(url, formData, returnsHtml) {
+		var options = {
+			method: 'POST',
+			uri: url,
+			form: formData
+		};
+
+		if(!returnsHtml)
+			options.json = true;
+
+		return rp(options);
+	},
+	getJson: function(url, jSendData) {
+		var options = {
+			method: 'GET',
+			uri: url,
+			body: jSendData,
+			json: true
+		};
+
+		return rp(options);
+	},
+	postJson: function(url, jPostData) {
+		var options = {
+			method: 'POST',
+			uri: url,
+			body: jPostData,
+			json: true
+		};
+
+		return rp(options);
 	},
 
 	// Constant definition helper.
