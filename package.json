@@ -1,6 +1,6 @@
 {
   "name": "skky",
-  "version": "1.0.20",
+  "version": "1.0.22",
   "description": "General helper classes and methods.",
   "main": "index.js",
   "scripts": {
@@ -22,6 +22,7 @@
   "homepage": "https://github.com/grayarrow/skky.nodejs#readme",
   "dependencies": {
     "fs": "0.0.1-security",
+    "mongodb": "^3.0.1",
     "os": "^0.1.1",
     "request-promise": "^4.2.2",
     "tap": "^11.0.1",

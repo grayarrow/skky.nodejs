@@ -4,6 +4,7 @@ module.exports = {
 	app: {},
 	config: {},
 	os: {},
+	db: {},
 
 	allGood: function(iot, hasObject) {
 		if (this.isNullOrUndefined(iot))
