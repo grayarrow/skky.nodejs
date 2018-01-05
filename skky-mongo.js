@@ -52,8 +52,7 @@ skkyMongo.prototype.createDatabase = function(collectionName) {
 		database.close();
 		console.log(self.databaseName + ': database closed!');
 	}).catch(function(err) {
-		console.log(fname + 'exception.');
-		console.log(fname + err);
+		console.log(fname, self.databaseName, collectionName, 'exception:', err);
 	});
 };
 
@@ -91,7 +90,7 @@ skkyMongo.prototype.getCollection = function(collectionName, cbEachItem, findObj
 
 		return chain;
 	}).catch(function(err) {
-		console.log(fname, 'exception:', err);
+		console.log(fname, self.databaseName, collectionName, 'exception:', err);
 	});
 };
 
@@ -137,7 +136,7 @@ skkyMongo.prototype.insert = function(collectionName, jobj, doNotAddCreated) {
 
 		return skky.isObject(insertedId) ? insertedId : res;
 	}).catch(function(err) {
-		console.log(fname, 'exception:', err);
+		console.log(fname, self.databaseName, collectionName, 'exception:', err);
 	});
 };
 
@@ -162,21 +161,21 @@ skkyMongo.prototype.update = function(collectionName, idToFind, setobj) {
 		//console.log(fname, 'Collection:', collectionName, 'updated element!');//, res);
 
 		if(!skky.isNullOrUndefined(database)) {
-			console.log(fname, self.databaseName, ': database closed!');
+			console.log(fname, self.databaseName, collectionName, ': database closed!');
 			try {
 				database.close();
 			}
 			catch(err) {
-				console.log(fname, 'Error closing', self.databaseName, 'database:', err);
+				console.log(fname, 'Error closing', self.databaseName, collectionName, err);
 			}
 		}
 		else {
-			console.log(fname, 'Database never opened.');
+			console.log(fname, self.databaseName, collectionName, 'Database never opened.');
 		}
 
 		return skky.isObject(res) && skky.isObject(res.result) ? res.result : res;
 	}).catch(function(err) {
-		console.log(fname, err);
+		console.log(fname, self.databaseName, collectionName, 'exception:', err);
 	});
 };
 

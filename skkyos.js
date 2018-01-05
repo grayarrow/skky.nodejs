@@ -1,24 +1,27 @@
 const fs = require('fs');
 const os = require('os');
-const util = require('util');
 
 const skky = require('./skky');
 
 module.exports = {
 	osinfo: null,
+
 	getHostname: function() {
 		return this.getOsInfo().osHostname;
+	},
+	getHostnameClean: function() {
+		return skky.nonNull(this.getHostname().replace(/[^\x20-\x7E]+/g, ''));
+	},
+	getUsername: function() {
+		return this.getOsInfo().userinfo.username;
 	},
 	getConfig: function(filename) {
 		if(skky.isNullOrUndefined(filename))
 			filename = skky.getConstant('ConfigFilename');
 
-		// Configuration file support.
-		var configSafe = this.readTextFileSync(filename);
-
-		return JSON.parse(configSafe);
+		return JSON.parse(this.readTextFileSync(filename));
 	},
-	// These 3 must be declared before verifyConfigSettings();
+
 	fileExistsSync: function(filename, deleteIfExists) {
 		try {
 			fs.statSync(filename);
@@ -82,92 +85,37 @@ module.exports = {
 	},
 
 	getOsInfo: function() {
-		var fname = 'getOsInfo:';
-
-		if(skky.isNullOrUndefined(this.osinfo)) {
-			var osinfo = {};
-
-			osinfo.cpuInfo = os.cpus();
-			osinfo.osName = os.type();
-			osinfo.cpuArchitecture = os.arch();
-			osinfo.osNics = os.networkInterfaces();
-			osinfo.osTempDir = os.tmpdir();
-			osinfo.osTotalMemory = os.totalmem();
-			osinfo.osFreeMemory = os.freemem();
-			osinfo.osUptime = os.uptime();
-			osinfo.osHostname = os.hostname();
-			osinfo.osPlatform = os.platform();
-			osinfo.osRelease = os.release();
-			osinfo.isArduino = false;
-			osinfo.isFedora = false;
-			osinfo.isLinux = (os.platform() == 'linux');
-			osinfo.isMac = (os.platform() == 'darwin');
-			osinfo.isRaspberryPi = false;
-			osinfo.isWindows = (os.platform() == 'win32');
-		
-			var distro = this.readTextFileSync('/etc/os-release');
-			if (distro.length > 0) {
-				osinfo.distro = distro;
-				if(distro.toLowerCase().indexOf('raspbian') > -1)
-					osinfo.isRaspberryPi = true;
-				if(distro.toLowerCase().indexOf('fedora') > -1)
-					osinfo.isFedora = true;
-			}
-			
-			distro = this.readTextFileSync('/etc/release');
-			if (distro.length > 0 && distro.toLowerCase().indexOf('edison') > -1) {
-				osinfo.distro = distro;
-				osinfo.isArduino = true;
-			}
-		
-			try {
-				//if (!skky.hasData(config.machineId))
-					osinfo.machineId = this.readTextFileSync('/etc/machine-id', true);
-			}
-			catch(err) {
-				console.log(fname, 'Error reading /etc/machine-id file on Linux.');
-				console.error(fname, err);
-			}
-
-			this.osinfo = osinfo;
-		}
+		if(skky.isNullOrUndefined(this.osinfo))
+			this.osinfo = this.getOsInfoRaw();
 
 		return this.osinfo;
 	},
-	verifyConfigSettings: function() {
-		var fname = 'verifyConfigSettings:';
-	
-		var isok = true;
-		var filesize = 0;
+	getOsInfoRaw: function() {
+		var fname = 'getOsInfoRaw:';
+
 		var osinfo = {};
 
-		console.log(fname, config);
-	
-		config.ipAddress = this.getIpAddressInfo();
-		config.lastInitialization = skky.iot.getBase(isok ? 0 : -1);
-		
-		filesize = this.saveJsonToFileSync(config, skky.constants.ConfigFilenameSafeMode);
-		if (filesize > 100)
-			isok = true;
-	
-		osinfo.cpuInfo = os.cpus();
-		osinfo.osName = os.type();
-		osinfo.cpuArchitecture = os.arch();
-		osinfo.osNics = os.networkInterfaces();
-		osinfo.osTempDir = os.tmpdir();
-		osinfo.osTotalMemory = os.totalmem();
-		osinfo.osFreeMemory = os.freemem();
-		osinfo.osUptime = os.uptime();
-		osinfo.osHostname = os.hostname();
-		osinfo.osPlatform = os.platform();
-		osinfo.osRelease = os.release();
+		osinfo.cpus = os.cpus();
+		osinfo.type = os.type();
+		osinfo.architecture = os.arch();
+		osinfo.nics = os.networkInterfaces();
+		osinfo.tempDir = os.tmpdir();
+		osinfo.totalMemory = os.totalmem();
+		osinfo.freeMemory = os.freemem();
+		osinfo.uptime = os.uptime();
+		osinfo.hostname = os.hostname();
+		osinfo.platform = os.platform();
+		osinfo.release = os.release();
 		osinfo.isArduino = false;
 		osinfo.isFedora = false;
 		osinfo.isLinux = (os.platform() == 'linux');
 		osinfo.isMac = (os.platform() == 'darwin');
 		osinfo.isRaspberryPi = false;
 		osinfo.isWindows = (os.platform() == 'win32');
-	
+
+		osinfo.userinfo = os.userInfo();
+		osinfo.ips = this.getIpAddressInfo();
+
 		var distro = this.readTextFileSync('/etc/os-release');
 		if (distro.length > 0) {
 			osinfo.distro = distro;
@@ -176,23 +124,35 @@ module.exports = {
 			if(distro.toLowerCase().indexOf('fedora') > -1)
 				osinfo.isFedora = true;
 		}
-		
+
 		distro = this.readTextFileSync('/etc/release');
 		if (distro.length > 0 && distro.toLowerCase().indexOf('edison') > -1) {
 			osinfo.distro = distro;
 			osinfo.isArduino = true;
 		}
-	
+
 		try {
-			if (!skky.hasData(config.machineId))
-				osinfo.machineId = this.readTextFileSync('/etc/machine-id', true);
+			osinfo.machineId = this.readTextFileSync('/etc/machine-id', true);
 		}
 		catch(err) {
 			console.log(fname, 'Error reading /etc/machine-id file on Linux.');
 			console.error(fname, err);
 		}
+
+		return osinfo;
+	},
+
+	updateConfigSettings: function() {
+		var isok = true;
+		var filesize = 0;
+	
+		config.lastInitialization = skky.iot.getBase(isok ? 0 : -1);
 		
-		config.osInfo = osinfo;
+		filesize = this.saveJsonToFileSync(config, skky.constants.ConfigFilenameSafeMode);
+		if (filesize > 100)
+			isok = true;
+
+		config.osInfo = this.getOsInfo();
 	
 		isok = false;
 		filesize = this.saveJsonToFileSync(config, skky.constants.ConfigFilename);
@@ -234,55 +194,3 @@ module.exports = {
 	}
 };
 
-function updateLocalConfig(jo, configObj, filename, checkGero) {
-	const fname = 'updateLocalConfig: ';
-
-	var dirty = false;
-	try {
-		if (!skky.isNullOrUndefined(jo) && skky.isObject(jo)) {
-			dirty |= skky.compareField(jo, configObj, 'mainServerUrl');
-			dirty |= skky.compareField(jo, configObj, 'gerokey');
-			if (checkGero || 0) {
-				dirty |= skky.compareField(jo, configObj, 'gero');
-			}
-
-			if (dirty && skky.hasData(jo.mainServerUrl)) {
-				var filesize = saveJsonToFileSync(jo, filename);
-				console.log(fname + 'Writing ' + filesize + ' bytes to ' + filename + '.');
-				if (filesize > 100)
-					return true;
-			}
-
-			console.log(fname + 'NOT Writing to ' + filename + '. No Changes.');
-		}
-	}
-	catch(e) {
-		console.log(fname);
-		console.log(fname, e);
-	}
-
-	return false;
-}
-
-function resetConfiguration(jo) {
-	var fname = 'resetConfiguration: ';
-
-	var i = 0;
-
-	try {
-		updateLocalConfig(jo, config, skky.constants.ConfigFilename, true);
-		updateLocalConfig(jo, configSafe, skky.constants.ConfigFilenameSafeMode, false);
-	}
-	catch(err) {
-		console.log(fname + 'Error setting updated Gero configuration files. ' + err.message);
-	}
-
-	try {
-		console.log(fname + 'New Gero ' + util.inspect((jo.gero || {})) + '.');
-	}
-	catch(err) {
-		console.log(fname + 'Error resetting Gero before reinitialization. ' + err.message);
-	}
-
-	return i;
-}

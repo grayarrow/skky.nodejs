@@ -237,5 +237,9 @@ module.exports = {
 		catch(err) { }
 		
 		return false;
+	},
+
+	getUsername: function() {
+		return this.os.getUsername();
 	}
 };
