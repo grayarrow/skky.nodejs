@@ -36,7 +36,7 @@ function iot(code, ret, cmd, msg, err) {
 
 	if('undefined' !== typeof code)
 		this.code = code;
-	
+
 	this.addReturn(ret);
 	this.addCommand(cmd);
 	this.addMessage(msg);
@@ -71,7 +71,7 @@ iot.prototype.addCommand = function(cmd, obj) {
 	if ('undefined' !== typeof(cmd)) {
 		if (skky.isNumber(cmd)) {
 			//console.log('adding command # ' + cmd + '.');
-			
+
 			var newcmd = new iot();
 			newcmd.code = cmd;
 			this.c = this.addCommand(newcmd, obj);
@@ -87,7 +87,7 @@ iot.prototype.addCommand = function(cmd, obj) {
 			}
 		}
 	}
-	
+
 	return this.c;
 };
 
@@ -144,7 +144,7 @@ iot.getTopWrapper = function(code, ret, cmd, msg, err) {
 iot.getWithError = function(err) {
 	var i = this.getBase();
 	i.addError(err);
-	
+
 	return i;
 };
 
@@ -156,28 +156,28 @@ iot.getWithEvent = function(gpioid, activeLow, state, vstate) {
 		vstate: vstate,
 		state: state
 	});
-	
+
 	return i;
 };
 
 iot.getWithCommand = function(cmd, obj) {
 	var i = new iot();
 	i.addCommand(cmd, obj);
-	
+
 	return i;
 };
 
 iot.getWithObject = function(obj) {
 	var i = new iot();
 	i.addObject(obj);
-	
+
 	return i;
 };
 
 iot.getWithReturn = function(ret, obj) {
 	var i = new iot();
 	i.addReturn(ret, obj);
-	
+
 	return i;
 };
 
@@ -186,15 +186,15 @@ iot.getLogicalState = function(vstate, isActiveLow, minValue, maxValue) {
 	isActiveLow = isActiveLow || 0;
 	minValue = minValue || 0;
 	maxValue = maxValue || 0;
-	
+
 	if (minValue == maxValue
 		|| (minValue <= 1 && maxValue <= 1)) {
 		if (vstate)
 			return isActiveLow ? 0 : 1;
-		
+
 		return isActiveLow ? 1 : 0;
 	}
-	
+
 	if (isActiveLow) {
 		if (vstate <= minValue)
 			return maxValue;
@@ -203,14 +203,14 @@ iot.getLogicalState = function(vstate, isActiveLow, minValue, maxValue) {
 		else
 			return maxValue - vstate;
 	}
-	
+
 	return vstate;
 };
 
 iot.hasCommandCode = function(jo, code) {
 	if (code === jo.code)
 		return true;
-	
+
 	for(var cmd = null, i = 0; cmd = skky.getObject(jo.c, i); ++i) {
 		if (code === cmd.code)
 			return true;

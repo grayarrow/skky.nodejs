@@ -25,7 +25,7 @@ module.exports = {
 	fileExistsSync: function(filename, deleteIfExists) {
 		try {
 			fs.statSync(filename);
-			
+
 			if (deleteIfExists)
 				fs.unlinkSync(filename);
 		}
@@ -40,31 +40,31 @@ module.exports = {
 	},
 
 	saveJsonToFileSync: function(jo, filename) {
-		var fname = 'saveJsonToFileSync:';
+		const fname = 'saveJsonToFileSync:';
 		var backupFilename = filename + '.bak';
-		
+
 		try {
 			if(this.fileExistsSync(filename))
 				fs.writeFileSync(backupFilename, fs.readFileSync(filename));
-	
+
 			fs.writeFileSync(filename, JSON.stringify(jo));
-			
+
 			var stats = fs.statSync(filename);
 			var fileSizeInBytes = stats.size;
-	
+
 			console.log(filename + ' is ' + fileSizeInBytes + ' bytes.');
 			return fileSizeInBytes;
 		}
 		catch(e) {
 			console.error(fname, e);
 		}
-		
+
 		return -1;
 	},
 
 	readTextFileSync: function(filename, replaceLineEnds) {
-		var fname = 'readTextFileSync: ';
-		
+		const fname = 'readTextFileSync: ';
+
 		var s = '';
 		try {
 			if (fs.existsSync(filename)) {
@@ -80,7 +80,7 @@ module.exports = {
 			console.log(fname, 'Error reading', skky.nonNull(filename), 'file.');
 			console.error(fname, err);
 		}
-		
+
 		return skky.nonNull(s);
 	},
 
@@ -91,7 +91,7 @@ module.exports = {
 		return this.osinfo;
 	},
 	getOsInfoRaw: function() {
-		var fname = 'getOsInfoRaw:';
+		const fname = 'getOsInfoRaw:';
 
 		var osinfo = {};
 
@@ -145,38 +145,38 @@ module.exports = {
 	updateConfigSettings: function() {
 		var isok = true;
 		var filesize = 0;
-	
+
 		config.lastInitialization = skky.iot.getBase(isok ? 0 : -1);
-		
+
 		filesize = this.saveJsonToFileSync(config, skky.constants.ConfigFilenameSafeMode);
 		if (filesize > 100)
 			isok = true;
 
 		config.osInfo = this.getOsInfo();
-	
+
 		isok = false;
 		filesize = this.saveJsonToFileSync(config, skky.constants.ConfigFilename);
 		if (filesize > 100)
 			isok = true;
-		
+
 		return isok;
 	},
-	
+
 	getIpAddressInfo: function() {
-		var fname = 'getIpAddressInfo: ';
-	
+		const fname = 'getIpAddressInfo: ';
+
 		var ifaces = os.networkInterfaces();
 		var ipAddress = [];
-	
+
 		Object.keys(ifaces).forEach(function (ifname) {
 			var alias = 0;
-			
+
 			ifaces[ifname].forEach(function (iface) {
 				if ('IPv4' !== iface.family || iface.internal !== false) {
 					// skip over internal (i.e. 127.0.0.1) and non-ipv4 addresses
 					return;
 				}
-				
+
 				if (alias >= 1) {
 					// this single interface has multiple ipv4 addresses
 					console.log(fname, ifname + ':', alias, iface.address);
@@ -184,7 +184,7 @@ module.exports = {
 					// this interface has only one ipv4 adress
 					console.log(fname, ifname, iface.address);
 				}
-	
+
 				++alias;
 				ipAddress.push(iface.address);
 			});

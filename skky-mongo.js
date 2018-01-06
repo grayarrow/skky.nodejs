@@ -1,6 +1,78 @@
 const mongo = require('mongodb');
 const skky = require('./skky');
 
+function CrudCounter() {
+	this.CrudCounts = function(collectionName) {
+		this.collection = collectionName || '';
+		this.selected = 0;
+		this.selectedError = 0;
+		this.selectedException = 0;
+		this.added = 0;
+		this.addedError = 0;
+		this.addedException = 0;
+		this.updated = 0;
+		this.updatedError = 0;
+		this.updatedException = 0;
+		this.deleted = 0;
+		this.deletedError = 0;
+		this.deletedException = 0;
+		this.exception = 0;
+	};
+
+	this.cruds = [];
+	this.find = function(collectionName) {
+		for(var i = 0; i < this.cruds.length; ++i) {
+			if(collectionName == this.cruds[i].collection)
+				return this.cruds[i];
+		}
+
+		var cc = new this.CrudCounts(collectionName);
+		this.cruds.push(cc);
+
+		return cc;
+	};
+	this.select = function(collectionName, count) {
+		this.find(collectionName).selected += (count || 1);
+	};
+	this.selectError = function(collectionName, count) {
+		this.find(collectionName).selectedError += (count || 1);
+	};
+	this.selectException = function(collectionName, count) {
+		this.find(collectionName).selectedException += (count || 1);
+	};
+	this.add = function(collectionName, count) {
+		this.find(collectionName).added += (count || 1);
+	};
+	this.addError = function(collectionName, count) {
+		this.find(collectionName).addedError += (count || 1);
+	};
+	this.addException = function(collectionName, count) {
+		this.find(collectionName).addedException += (count || 1);
+	};
+	this.del = function(collectionName, count) {
+		this.find(collectionName).deleted += (count || 1);
+	};
+	this.delError = function(collectionName, count) {
+		this.find(collectionName).deletedError += (count || 1);
+	};
+	this.delException = function(collectionName, count) {
+		this.find(collectionName).deletedException += (count || 1);
+	};
+	this.update = function(collectionName, count) {
+		this.find(collectionName).updated += (count || 1);
+	};
+	this.updateError = function(collectionName, count) {
+		this.find(collectionName).updatedError += (count || 1);
+	};
+	this.updateException = function(collectionName, count) {
+		this.find(collectionName).updatedException += (count || 1);
+	};
+
+	this.exception = function(collectionName, count) {
+		this.find(collectionName).exception += (count || 1);
+	};
+}
+
 function skkyMongo(dburl, dbport, dbname) {
 	this.databaseUrl = dburl || 'localhost';
 	this.databasePort = dbport || 27017;
@@ -13,62 +85,86 @@ function skkyMongo(dburl, dbport, dbname) {
 	this.numResponsesExceptions = 0;
 
 	this.database = null;
+	this.crudCounter = new CrudCounter();
 }
 
-skkyMongo.prototype.connectUrl = function(adddb) {
-	//var fname = 'connectUrl: ';
-	adddb = adddb || false;
+skkyMongo.prototype.close = function() {
+	if(null != this.database)
+		this.database.close();
+};
+skkyMongo.prototype.connect = function(collectionName, findObj) {
+	var self = this;
+	var ret = null;
 
+	if(null != this.database) {
+		ret = this.database;
+
+		if(skky.hasData(collectionName)) {
+			if(skky.isObject(findObj))
+				ret = this.database.collection(collectionName).find(findObj);
+			else
+				ret = this.database.collection(collectionName);
+		}
+
+		return Promise.resolve(ret);
+	}
+
+	return mongo.MongoClient.connect(this.connectUrl())
+		.then(function(db) {
+			self.database = db.db(self.databaseName);
+
+			ret = self.database;
+
+			if(skky.hasData(collectionName)) {
+				if(skky.isObject(findObj))
+					ret = self.database.collection(collectionName).find(findObj);
+				else
+					ret = self.database.collection(collectionName);
+			}
+
+			return ret;
+		});
+};
+
+skkyMongo.prototype.connectUrl = function() {
 	var url = 'mongodb://' + this.databaseUrl;
 	if(this.databasePort > 0)
 		url += ':' + this.databasePort;
 
-	if(adddb)
-		url += '/' + this.databaseName;
+	// As of 3.x, you do not add the database name to the connection string.
+	//url += '/' + this.databaseName;
 
 	return url;
 };
 
 skkyMongo.prototype.createDatabase = function(collectionName) {
-	var fname = 'skkyMongo.createDatabase:';
+	const fname = 'skkyMongo.createDatabase:';
+
 	var self = this;
-	var database = null;
 	collectionName = skky.nonNull(collectionName, this.collectionName);
 
-	return mongo.MongoClient.connect(this.connectUrl()).then(function(db) {
-		console.log(fname, 'Database:', self.databaseName, 'created!');
-
-		database = db;
-		//console.log(db);
-		return db.db(self.databaseName).collection(collectionName);
-	}).then(function(dbcoll) {
-		//console.log(dbase.listCollections(collectionName));
-		//console.log('dbcoll: ' + util.inspect(dbcoll, {showHidden: false, depth: null}));
-		console.log('Collection: ' + collectionName + ' created!');
+	return this.connect(collectionName).then(function(dbcoll) {
+		console.log(fname, 'Collection:', collectionName, 'created!');
 		return dbcoll.insert({"test":"value " + (new Date())});
 	}).then(function(res) {
-		console.log('Collection: ' + collectionName + ' added element!');
-		console.log(res);
-		database.close();
-		console.log(self.databaseName + ': database closed!');
+		console.log(fname, 'Collection:', collectionName, 'added element!', res);
 	}).catch(function(err) {
 		console.log(fname, self.databaseName, collectionName, 'exception:', err);
 	});
 };
 
 skkyMongo.prototype.getCollection = function(collectionName, cbEachItem, findObj) {
-	var fname = 'skkyMongo.getCollection:';
+	const fname = 'skkyMongo.getCollection:';
+
 	var self = this;
-	var database = null;
 	collectionName = skky.nonNull(collectionName, this.collectionName);
 
 	console.log(fname, collectionName, findObj);
-	return mongo.MongoClient.connect(this.connectUrl()).then(function(db) {
-		database = db;
-
-		return db.db(self.databaseName).collection(collectionName).find(findObj).toArray(); //.limit(2).toArray();
+	return this.connect(collectionName, findObj).then(function(dbfind) {
+		return dbfind.toArray(); //.limit(2).toArray();
 	}).then(function(dbarr) {
-		console.log(fname, collectionName, 'array:', dbarr);
+		self.crudCounter.select(collectionName);
+		//console.log(fname, collectionName, 'array:', dbarr);
 		var chain = Promise.resolve();
 		if(skky.isFunction(cbEachItem)) {
 			dbarr.forEach((item, num) => {
@@ -82,74 +178,68 @@ skkyMongo.prototype.getCollection = function(collectionName, cbEachItem, findObj
 		}
 
 		chain = chain.then(function() {
-			database.close();
-			console.log(fname, self.databaseName, 'database closed for', collectionName, '.');
-
 			return dbarr;
 		});
 
 		return chain;
 	}).catch(function(err) {
+		self.crudCounter.selectException(collectionName);
+
 		console.log(fname, self.databaseName, collectionName, 'exception:', err);
 	});
 };
 
 skkyMongo.prototype.insert = function(collectionName, jobj, doNotAddCreated) {
-	var fname = 'skkyMongo.insert:';
+	const fname = 'skkyMongo.insert:';
+
 	var self = this;
-	var database = null;
-	collectionName = skky.nonNull(collectionName, this.collectionName);
 
-	doNotAddCreated = doNotAddCreated || false;
-	jobj = jobj || {};
+	//console.log(fname, 'Connecting to', this.connectUrl(), this.databaseName, collectionName, jobj);
+	return this.connect(collectionName).then(function(dbcoll) {
+		if(!doNotAddCreated) {
+			if(!skky.hasData(jobj.createdBy))
+				jobj.createdBy = skky.getUsername();
 
-	if(!doNotAddCreated) {
-		if(!skky.hasData(jobj.createdBy))
-			jobj.createdBy = skky.getUsername();
+			if(!skky.hasData(jobj.created))
+				jobj.created = new Date();
+		}
 
-		if(!skky.hasData(jobj.created))
-			jobj.created = new Date();
-	}
-
-	console.log(fname, 'Connecting to', this.connectUrl(), this.databaseName, collectionName, jobj);
-	return mongo.MongoClient.connect(this.connectUrl()).then(function(db) {
-		//console.log(fname, 'Database:', self.databaseName, 'connected!');
-
-		database = db;
-
-		return db.db(self.databaseName).collection(collectionName).insert(jobj);
+		return dbcoll.insert(jobj);
 	}).then(function(res) {
 		console.log(fname, 'Collection:', collectionName, ' added element!', res);
-		database.close();
+
 		var insertedId = 0;
 		if(skky.isObject(res)) {
 			if(skky.isObject(res.insertedIds)) {
 				insertedId = res.insertedIds['0'];
-				++self.numItemsAdded;
+				self.crudCounter.add(collectionName);
 			}
 			else if(skky.isArray(res.insertedIds, 1)) {
 				insertedId = res.insertedIds[0];
-				++self.numItemsAdded;
+				self.crudCounter.add(collectionName);
 			}
 		}
 
 		//console.log('insertedIds:', res.insertedIds['0'], insertedId, skky.isObject(insertedId));
 
-		console.log(fname, self.databaseName, ': database closed! Collection:', collectionName, skky.isObject(insertedId) ? 'INSERTed id: ' + insertedId : 'Nothing INSERTed.');
+		console.log(fname, self.databaseName, ': Collection:', collectionName, skky.isObject(insertedId) ? 'INSERTed id: ' + insertedId : 'Nothing INSERTed.');
 
-		return skky.isObject(insertedId) ? insertedId : res;
+		if(skky.isObject(insertedId))
+			return insertedId;
+
+		self.crudCounter.addError(collectionName);
+		return res;
 	}).catch(function(err) {
-		console.log(fname, self.databaseName, collectionName, 'exception:', err);
+		self.crudCounter.addException(collectionName);
 
-		return null;
+		console.log(fname, self.databaseName, collectionName, 'exception:', err);
 	});
 };
 
 skkyMongo.prototype.update = function(collectionName, idToFind, setobj, doNotAddUpdated) {
-	var fname = 'skkyMongo.update:';
+	const fname = 'skkyMongo.update:';
 
 	var self = this;
-	var database = null;
 	collectionName = skky.nonNull(collectionName, this.collectionName);
 
 	if(!doNotAddUpdated) {
@@ -160,29 +250,27 @@ skkyMongo.prototype.update = function(collectionName, idToFind, setobj, doNotAdd
 			setobj.updated = new Date();
 	}
 
-	return mongo.MongoClient.connect(this.connectUrl()).then(function(db) {
-		database = db;
-
+	return this.connect(collectionName).then(function(dbcoll) {
 		var jfind = {
 			_id: idToFind
 		};
 
-		return db.db(self.databaseName).collection(collectionName).update(jfind, {
+		return dbcoll.update(jfind, {
 			$set: setobj
 		});
 	}).then(function(res) {
 		//console.log(fname, 'Collection:', collectionName, 'updated element!');//, res);
 
-		console.log(fname, self.databaseName, collectionName, ': database closed!');
-		try {
-			database.close();
-		}
-		catch(err) {
-			console.log(fname, 'Error closing', self.databaseName, collectionName, err);
+		if(skky.isObject(res) && skky.isObject(res.result)) {
+			self.crudCounter.update(collectionName);
+			return res.result;
 		}
 
-		return skky.isObject(res) && skky.isObject(res.result) ? res.result : res;
+		self.crudCounter.updateError(collectionName);
+		return res;
 	}).catch(function(err) {
+		self.crudCounter.updateException(collectionName);
+
 		console.log(fname, self.databaseName, collectionName, 'exception:', err);
 	});
 };

@@ -103,7 +103,7 @@ module.exports = {
 	},
 	isEmptyString: function(s) {
 		return !this.hasData(s);
-	},	
+	},
 	isFunction: function(o) {
 		return ('function' === typeof o);
 	},
@@ -131,7 +131,7 @@ module.exports = {
 		return '';
 	},
 
-	// Trim methods	
+	// Trim methods
 	ltrim: function(str) {
 		return this.nonNull(str).replace(/^\s+/, '');
 	},
