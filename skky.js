@@ -120,7 +120,7 @@ module.exports = {
 	isString: function(o) {
 		return (('string' === typeof o) || (o instanceof String));
 	},
-	
+
 	nonNull: function(s, obj) {
 		if(this.hasData(s))
 			return s;
@@ -222,20 +222,20 @@ module.exports = {
 
 		return this.constants;
 	},
-	
+
 	// Compare fields from src to dest object.
 	compareField: function(srcObj, destObj, fieldName) {
 		try {
 			if (skky.isNullOrUndefined(srcObj[fieldName]))
 				return false;
-			
+
 			if (destObj[fieldName] !== srcObj[fieldName]) {
 				destObj[fieldName] = srcObj[fieldName];
 				return true;
 			}
 		}
 		catch(err) { }
-		
+
 		return false;
 	},
 

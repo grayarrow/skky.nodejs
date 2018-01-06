@@ -11,7 +11,7 @@ function skkyMongo(dburl, dbport, dbname) {
 	this.numItemsUpdated = 0;
 	this.numResponsesAdded = 0;
 	this.numResponsesExceptions = 0;
-	
+
 	this.database = null;
 }
 
@@ -99,11 +99,14 @@ skkyMongo.prototype.insert = function(collectionName, jobj, doNotAddCreated) {
 	var self = this;
 	var database = null;
 	collectionName = skky.nonNull(collectionName, this.collectionName);
-	
+
 	doNotAddCreated = doNotAddCreated || false;
 	jobj = jobj || {};
 
 	if(!doNotAddCreated) {
+		if(!skky.hasData(jobj.createdBy))
+			jobj.createdBy = skky.getUsername();
+
 		if(!skky.hasData(jobj.created))
 			jobj.created = new Date();
 	}
@@ -129,7 +132,7 @@ skkyMongo.prototype.insert = function(collectionName, jobj, doNotAddCreated) {
 				++self.numItemsAdded;
 			}
 		}
-		
+
 		//console.log('insertedIds:', res.insertedIds['0'], insertedId, skky.isObject(insertedId));
 
 		console.log(fname, self.databaseName, ': database closed! Collection:', collectionName, skky.isObject(insertedId) ? 'INSERTed id: ' + insertedId : 'Nothing INSERTed.');
@@ -137,15 +140,25 @@ skkyMongo.prototype.insert = function(collectionName, jobj, doNotAddCreated) {
 		return skky.isObject(insertedId) ? insertedId : res;
 	}).catch(function(err) {
 		console.log(fname, self.databaseName, collectionName, 'exception:', err);
+
+		return null;
 	});
 };
 
-skkyMongo.prototype.update = function(collectionName, idToFind, setobj) {
+skkyMongo.prototype.update = function(collectionName, idToFind, setobj, doNotAddUpdated) {
 	var fname = 'skkyMongo.update:';
 
 	var self = this;
 	var database = null;
 	collectionName = skky.nonNull(collectionName, this.collectionName);
+
+	if(!doNotAddUpdated) {
+		if(!skky.hasData(setobj.updatedBy))
+			setobj.updatedBy = skky.getUsername();
+
+		if(!skky.hasData(setobj.updated))
+			setobj.updated = new Date();
+	}
 
 	return mongo.MongoClient.connect(this.connectUrl()).then(function(db) {
 		database = db;
@@ -160,17 +173,12 @@ skkyMongo.prototype.update = function(collectionName, idToFind, setobj) {
 	}).then(function(res) {
 		//console.log(fname, 'Collection:', collectionName, 'updated element!');//, res);
 
-		if(!skky.isNullOrUndefined(database)) {
-			console.log(fname, self.databaseName, collectionName, ': database closed!');
-			try {
-				database.close();
-			}
-			catch(err) {
-				console.log(fname, 'Error closing', self.databaseName, collectionName, err);
-			}
+		console.log(fname, self.databaseName, collectionName, ': database closed!');
+		try {
+			database.close();
 		}
-		else {
-			console.log(fname, self.databaseName, collectionName, 'Database never opened.');
+		catch(err) {
+			console.log(fname, 'Error closing', self.databaseName, collectionName, err);
 		}
 
 		return skky.isObject(res) && skky.isObject(res.result) ? res.result : res;
