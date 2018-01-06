@@ -2,8 +2,7 @@ const mongo = require('mongodb');
 const skky = require('./skky');
 
 function CrudCounter() {
-	this.CrudCounts = function(collectionName) {
-		this.collection = collectionName || '';
+	this.CrudCounts = function() {
 		this.selected = 0;
 		this.selectedError = 0;
 		this.selectedException = 0;
@@ -19,17 +18,12 @@ function CrudCounter() {
 		this.exception = 0;
 	};
 
-	this.cruds = [];
+	this.cruds = {};
 	this.find = function(collectionName) {
-		for(var i = 0; i < this.cruds.length; ++i) {
-			if(collectionName == this.cruds[i].collection)
-				return this.cruds[i];
-		}
+		if(!skky.hasData(this.cruds[collectionName]))
+			this.cruds[collectionName] = new this.CrudCounts();
 
-		var cc = new this.CrudCounts(collectionName);
-		this.cruds.push(cc);
-
-		return cc;
+		return this.cruds[collectionName];
 	};
 	this.select = function(collectionName, count) {
 		this.find(collectionName).selected += (count || 1);
@@ -187,6 +181,10 @@ skkyMongo.prototype.getCollection = function(collectionName, cbEachItem, findObj
 
 		console.log(fname, self.databaseName, collectionName, 'exception:', err);
 	});
+};
+
+skkyMongo.prototype.getStats = function() {
+	return skky.makeJsonLite(this.crudCounter.cruds);
 };
 
 skkyMongo.prototype.insert = function(collectionName, jobj, doNotAddCreated) {

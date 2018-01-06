@@ -64,23 +64,24 @@ module.exports = {
 		if(this.isNullOrUndefined(minlength))
 			minlength = 1;
 
-		if (this.isString(o))
+		if (this.isString(o) || this.isArray(o))
 			return (o.length >= minlength);
-
-		if (this.isArray(o))
-			return this.isArray(o, minlength);
 
 		// Objects and primitives will not have any length.
 		if (!this.isObject(o))
 			return minlength <= 1;
 
+		var cnt = 0;
 		if (this.isObject(o)) {
 			for (var prop in o) {
-				if (o.hasOwnProperty(prop))
-					return true;
+				if (o.hasOwnProperty(prop)) {
+					++cnt;
+					if(cnt >= minlength)
+						return true;
+				}
 			}
 
-			return !(true && JSON.stringify(o) === JSON.stringify({}));
+			return JSON.stringify(o) !== JSON.stringify({});
 		}
 
 		return true;	// Must be a number or boolean or something.
@@ -173,6 +174,31 @@ module.exports = {
 		};
 
 		return rp(options);
+	},
+	makeJsonLite: function(obj) {
+		let cloned = Object.assign({}, obj);
+	
+		this.makeJsonLiteInPlace(cloned);
+		
+		return cloned;
+	},
+	makeJsonLiteInPlace: function(o) {
+		for (var k in o) {
+			if(this.isNullOrUndefined(o[k]) ||
+			   (this.isNumber(o[k] && 0 === o[k]) ||
+				(this.isString(o[k]) && !this.hasData(o[k])) ||
+				(this.isBoolean(o[k]) && (false == o[k])) ||
+				this.isFunction(o[k]))) {
+				delete o[k];
+			}
+			else if(this.isObject(o[k])) {
+				// The property is an object
+				this.makeJsonLiteInPlace(o[k]); // <-- Make a recursive call on the nested object
+				if (Object.keys(o[k]).length === 0) {
+					delete o[k]; // The object had no properties, so delete that property
+				}
+			}
+		}
 	},
 
 	// Constant definition helper.

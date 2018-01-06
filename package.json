@@ -1,6 +1,6 @@
 {
   "name": "skky",
-  "version": "1.0.55",
+  "version": "1.0.62",
   "description": "General helper classes and methods.",
   "main": "index.js",
   "scripts": {
