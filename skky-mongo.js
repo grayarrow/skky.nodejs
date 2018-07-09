@@ -83,14 +83,14 @@ function skkyMongo(dburl, dbport, dbname) {
 }
 
 skkyMongo.prototype.close = function() {
-	if(null != this.database)
+	if(null !== this.database)
 		this.database.close();
 };
 skkyMongo.prototype.connect = function(collectionName, findObj) {
 	var self = this;
 	var ret = null;
 
-	if(null != this.database) {
+	if(null !== this.database) {
 		ret = this.database;
 
 		if(skky.hasData(collectionName)) {
@@ -155,7 +155,10 @@ skkyMongo.prototype.getCollection = function(collectionName, cbEachItem, findObj
 
 	console.log(fname, collectionName, findObj);
 	return this.connect(collectionName, findObj).then(function(dbfind) {
-		return dbfind.toArray(); //.limit(2).toArray();
+		if(skky.hasData(findObj))
+			return dbfind.toArray(); //.limit(2).toArray();
+
+		return dbfind.find().toArray();
 	}).then(function(dbarr) {
 		self.crudCounter.select(collectionName);
 		//console.log(fname, collectionName, 'array:', dbarr);
