@@ -1,0 +1,10 @@
+{
+	"databaseServerType":"mongodb",
+	"databaseServerUrl":"192.168.1.228",
+	"databaseServerPort":27017,
+	"databaseName":"kraa",
+	"databaseCollectionName":"vericloudsApiResponses",
+	"vericloudsApiUrl":"https://api.vericlouds.com/index.php",
+	"vericloudsApiKey":"CustomerTRIAL_KRAA",
+	"vericloudsApiSecret": "adba730d8f485dbc210fb73f909cb394c8d7957488db9c36ebc991fcc567073f"
+}
