@@ -22,14 +22,14 @@
   "homepage": "https://github.com/grayarrow/skky.nodejs#readme",
   "dependencies": {
     "fs": "0.0.2",
-    "mongodb": "^5.0.1",
-    "npm": "^9.1.2",
+    "npm": "^10.0.0",
+    "mongodb": "^6.0.0",
     "os": "^0.1.1",
     "request": "^2.88.0",
     "request-promise": "^4.2.5",
     "util": "^0.12.0"
   },
   "devDependencies": {
-    "tap": "^16.0.0"
+    "tap": "^18.5.7"
   }
 }
